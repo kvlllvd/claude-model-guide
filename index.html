@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Когда переключать модель</title>
+<meta name="description" content="Гайд по выбору модели и уровня усилия в Claude Code на задачах проекта Knowly.">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Когда переключать модель">
+<meta property="og:description" content="Две ручки Claude Code: кто делает работу и сколько он думает перед тем, как начать.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    --paper:      #EFF1EE;
+    --surface:    #F8F9F7;
+    --surface-2:  #E6EAE5;
+    --ink:        #1A211D;
+    --ink-soft:   #46504A;
+    --muted:      #6E7A73;
+    --rule:       #D6DBD5;
+    --rule-soft:  #E3E7E1;
+
+    --haiku:  #5E8250;
+    --sonnet: #2C6B5B;
+    --opus:   #26506E;
+    --fable:  #6A3468;
+
+    --heat-1: #93A79A;
+    --heat-2: #6E9A7E;
+    --heat-3: #B8952E;
+    --heat-4: #C4681F;
+    --heat-5: #A8331B;
+
+    --shadow: 0 1px 2px rgba(26,33,29,.06), 0 6px 20px -12px rgba(26,33,29,.22);
+
+    --f-display: "Literata", Georgia, "Times New Roman", serif;
+    --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121613;
+      --surface:    #1A201C;
+      --surface-2:  #232A25;
+      --ink:        #E7EBE7;
+      --ink-soft:   #BFC8C1;
+      --muted:      #909B93;
+      --rule:       #2C342E;
+      --rule-soft:  #232B26;
+
+      --haiku:  #9CC48A;
+      --sonnet: #5FBBA1;
+      --opus:   #7CB2DE;
+      --fable:  #C08FC2;
+
+      --heat-1: #8FA396;
+      --heat-2: #7FBE95;
+      --heat-3: #DDB84A;
+      --heat-4: #E68B45;
+      --heat-5: #E4614A;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #121613;
+    --surface:    #1A201C;
+    --surface-2:  #232A25;
+    --ink:        #E7EBE7;
+    --ink-soft:   #BFC8C1;
+    --muted:      #909B93;
+    --rule:       #2C342E;
+    --rule-soft:  #232B26;
+
+    --haiku:  #9CC48A;
+    --sonnet: #5FBBA1;
+    --opus:   #7CB2DE;
+    --fable:  #C08FC2;
+
+    --heat-1: #8FA396;
+    --heat-2: #7FBE95;
+    --heat-3: #DDB84A;
+    --heat-4: #E68B45;
+    --heat-5: #E4614A;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  img { max-width: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    overflow-wrap: break-word;
+  }
+
+  :focus-visible { outline: 2px solid var(--opus); outline-offset: 2px; border-radius: 3px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+
+  .wrap {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 68px;
+  }
+
+  .prose { max-width: 64ch; }
+
+  h1, h2, h3 { font-family: var(--f-display); font-weight: 600; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(28px, 6vw, 46px); line-height: 1.12; letter-spacing: -.015em; }
+  h2 { font-size: clamp(21px, 4vw, 27px); line-height: 1.2; letter-spacing: -.01em; }
+  h3 { font-size: 17px; line-height: 1.3; }
+  p { margin: 0; }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  section { display: flex; flex-direction: column; gap: 22px; }
+  .head { display: flex; flex-direction: column; gap: 8px; }
+  .lede { color: var(--ink-soft); font-size: 17px; }
+
+  code, .mono { font-family: var(--f-mono); font-size: .88em; }
+  code {
+    background: var(--surface-2);
+    border-radius: 4px;
+    padding: .12em .38em;
+    color: var(--ink);
+  }
+
+  /* ---------- hero ---------- */
+
+  header { display: flex; flex-direction: column; gap: 18px; }
+  header .sub { color: var(--ink-soft); font-size: clamp(16px, 2.4vw, 18px); max-width: 56ch; }
+
+  .twoline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .twoline > div { background: var(--surface); padding: 20px 22px; display: flex; flex-direction: column; gap: 5px; }
+  .twoline .k { font-family: var(--f-display); font-size: 20px; font-weight: 600; }
+  .twoline .v { color: var(--ink-soft); font-size: 15px; }
+
+  /* ---------- tiers ---------- */
+
+  .tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+
+  .tier {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--tint);
+    border-radius: 10px;
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: var(--shadow);
+  }
+  .tier.is-default { border-color: var(--tint); }
+  .tier[data-tier="haiku"]  { --tint: var(--haiku); }
+  .tier[data-tier="sonnet"] { --tint: var(--sonnet); }
+  .tier[data-tier="opus"]   { --tint: var(--opus); }
+  .tier[data-tier="fable"]  { --tint: var(--fable); }
+
+  .tier .name { font-family: var(--f-display); font-size: 19px; font-weight: 600; color: var(--tint); }
+  .tier .who { font-size: 14.5px; color: var(--ink); }
+  .tier .for { font-size: 14px; color: var(--muted); }
+
+  .price { display: flex; flex-direction: column; gap: 5px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--rule-soft); }
+  .price .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .price .label { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .price .x { font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--tint); font-variant-numeric: tabular-nums; }
+  .bar { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--tint); border-radius: 3px; }
+
+  .badge {
+    align-self: flex-start;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: var(--tint);
+    color: var(--surface);
+    font-weight: 600;
+  }
+
+  /* ---------- effort ramp ---------- */
+
+  .ramp { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 16px 14px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+  }
+  .step .fuel { display: flex; gap: 3px; }
+  .step .fuel span { flex: 1; height: 5px; border-radius: 2px; background: var(--surface-2); }
+  .step .fuel span.on { background: var(--tone); }
+  .step .lvl { font-family: var(--f-mono); font-size: 13.5px; font-weight: 600; color: var(--tone); }
+  .step .txt { font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); }
+  .step[data-lvl="1"] { --tone: var(--heat-1); }
+  .step[data-lvl="2"] { --tone: var(--heat-2); }
+  .step[data-lvl="3"] { --tone: var(--heat-3); }
+  .step[data-lvl="4"] { --tone: var(--heat-4); }
+  .step[data-lvl="5"] { --tone: var(--heat-5); }
+  .step .tag { font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+  /* ---------- three questions ---------- */
+
+  .q { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .q-row { display: grid; grid-template-columns: 34px 1fr auto; gap: 16px; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--rule-soft); }
+  .q-row:last-child { border-bottom: 0; }
+  .q-num { font-family: var(--f-display); font-size: 22px; font-weight: 600; color: var(--muted); line-height: 1; }
+  .q-text { font-size: 16px; }
+  .q-text small { display: block; color: var(--muted); font-size: 13.5px; line-height: 1.4; margin-top: 2px; }
+  .q-out { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+
+  /* ---------- task table ---------- */
+
+  .tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; }
+  th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; background: var(--surface-2); border-bottom: 1px solid var(--rule);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.task { font-size: 15px; }
+  td.task small { display: block; color: var(--muted); font-size: 13px; line-height: 1.4; }
+  td.m, td.e { white-space: nowrap; font-family: var(--f-mono); font-size: 13px; font-weight: 600; }
+  td.m { color: var(--tint); }
+  tr[data-tier="haiku"]  { --tint: var(--haiku); }
+  tr[data-tier="sonnet"] { --tint: var(--sonnet); }
+  tr[data-tier="opus"]   { --tint: var(--opus); }
+  tr[data-tier="fable"]  { --tint: var(--fable); }
+  td.e[data-lvl="1"] { color: var(--heat-1); }
+  td.e[data-lvl="2"] { color: var(--heat-2); }
+  td.e[data-lvl="3"] { color: var(--heat-3); }
+  td.e[data-lvl="4"] { color: var(--heat-4); }
+  td.e[data-lvl="5"] { color: var(--heat-5); }
+  .grp td {
+    background: var(--surface-2);
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding-top: 9px; padding-bottom: 9px;
+  }
+
+  /* ---------- rules ---------- */
+
+  .rules { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .rule-item { background: var(--surface); padding: 18px 20px; display: flex; flex-direction: column; gap: 5px; }
+  .rule-item .t { font-family: var(--f-display); font-size: 17px; font-weight: 600; }
+  .rule-item .d { color: var(--ink-soft); font-size: 15px; }
+
+  /* ---------- commands ---------- */
+
+  .cmds { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .cmd { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .cmd .when { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .cmd pre { margin: 0; font-family: var(--f-mono); font-size: 13px; line-height: 1.7; color: var(--ink); overflow-x: auto; }
+  .cmd .note { font-size: 13.5px; color: var(--muted); }
+
+  /* ---------- presets ---------- */
+
+  .presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .preset {
+    border: 1px solid var(--rule); border-radius: 10px; background: var(--surface);
+    padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow);
+  }
+  .preset .pname { font-family: var(--f-display); font-size: 20px; font-weight: 600; }
+  .preset .combo { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 13.5px; font-weight: 600; flex-wrap: wrap; }
+  .preset .combo .sep { color: var(--muted); font-weight: 400; }
+  .preset .pfor { font-size: 14.5px; color: var(--ink-soft); }
+  .preset code { font-size: 12.5px; align-self: flex-start; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 22px; color: var(--muted); font-size: 14px; max-width: 64ch; }
+
+  /* ---------- адаптив ---------- */
+
+  @media (max-width: 860px) {
+    .ramp { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 40px 18px 72px; gap: 52px; }
+    section { gap: 18px; }
+    .lede { font-size: 16px; }
+    .q-row { grid-template-columns: 26px 1fr; gap: 6px 14px; padding: 16px 18px; }
+    .q-out { grid-column: 2; }
+    .twoline > div { padding: 18px; }
+    .rule-item { padding: 16px 18px; }
+  }
+
+  @media (max-width: 640px) {
+    /* таблица превращается в карточки: горизонтальная прокрутка на телефоне не нужна */
+    .tablewrap { overflow-x: visible; }
+    table { min-width: 0; display: block; }
+    thead { display: none; }
+    tbody { display: block; }
+    tbody tr { display: block; padding: 14px 18px; border-bottom: 1px solid var(--rule-soft); }
+    tbody tr:last-child { border-bottom: 0; }
+    tbody td { display: block; padding: 0; border: 0; }
+    td.task { margin-bottom: 9px; }
+    td.m, td.e { display: inline-block; margin-right: 16px; }
+    td.m::before, td.e::before {
+      content: attr(data-label) " ";
+      font-weight: 400;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-size: 10px;
+      color: var(--muted);
+    }
+    tbody tr.grp { padding: 0; border-bottom: 0; }
+    tbody tr.grp td { padding: 8px 18px; }
+  }
+
+  @media (max-width: 520px) {
+    .ramp { grid-template-columns: repeat(2, 1fr); }
+    h1 { letter-spacing: -.01em; }
+    .twoline .k { font-size: 18px; }
+    .tier { padding: 16px; }
+  }
+
+  @media (max-width: 380px) {
+    .wrap { padding: 32px 14px 64px; }
+    .ramp { grid-template-columns: 1fr; }
+    .step { flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; }
+    .step .fuel { flex-basis: 100%; }
+    .step .txt { flex-basis: 100%; }
+  }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    .wrap { max-width: none; padding: 0; gap: 32px; }
+    .tier, .step, .cmd, .preset, .q, .rules, .tablewrap { box-shadow: none; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <span class="eyebrow">Claude Code · Knowly</span>
+    <h1>Когда переключать модель</h1>
+    <p class="sub">Две ручки, которые ты сейчас не трогаешь: <b>кто</b> делает работу и <b>сколько он думает</b> перед тем, как начать. Сейчас стоит Opus на всё и усилие <code>high</code>. Это хорошая настройка по умолчанию, но половину задач она делает дороже и медленнее, чем нужно.</p>
+
+    <div class="twoline">
+      <div>
+        <span class="k">Модель — это кто</span>
+        <span class="v">Как выбрать, кому отдать работу: стажёру, мастеру или главному инженеру. Меняет качество и цену в разы.</span>
+      </div>
+      <div>
+        <span class="k">Усилие — это сколько думает</span>
+        <span class="v">Один и тот же человек может глянуть и сделать, а может сесть, разобраться и только потом взяться. Меняет цену внутри одной модели.</span>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="head">
+      <span class="eyebrow">Ручка первая</span>
+      <h2>Четыре модели</h2>
+      <p class="lede prose">Цена — в разах от самой дешёвой. Если ты на подписке, это не рубли, а расход лимита: пропорции те же.</p>
+    </div>
+
+    <div class="tiers">
+      <div class="tier" data-tier="haiku">
+        <span class="name">Haiku 4.5</span>
+        <span class="who">Быстрый стажёр.</span>
+        <span class="for">Прочитать файл и пересказать. Переименовать. Показать, что в git. Думать не умеет — и не надо.</span>
+        <div class="price">
+          <div class="row"><span class="label">цена</span><span class="x">1×</span></div>
+          <div class="bar"><i style="width:10%"></i></div>
+        </div>
+      </div>
+
+      <div class="tier" data-tier="sonnet">
+        <span class="name">Sonnet 5</span>
+        <span class="who">Крепкий мастер.</span>
+        <span class="for">Делает то, что уже решено. Правки по спеке, вычитка, перенос текста, отступы и цвета в прототипе.</span>
+        <div class="price">
+          <div class="row"><span class="label">цена</span><span class="x">2×</span></div>
+          <div class="bar"><i style="width:20%"></i></div>
+        </div>
+      </div>
+
+      <div class="tier is-default" data-tier="opus">
+        <span class="badge">твой дефолт</span>
+        <span class="name">Opus 5</span>
+        <span class="who">Старший, который решает.</span>
+        <span class="for">Всё, где надо думать: сборка фич, отладка, проверки, планы, разбор спеки. Девять из десяти задач Knowly — сюда.</span>
+        <div class="price">
+          <div class="row"><span class="label">цена</span><span class="x">5×</span></div>
+          <div class="bar"><i style="width:50%"></i></div>
+        </div>
+      </div>
+
+      <div class="tier" data-tier="fable">
+        <span class="name">Fable 5</span>
+        <span class="who">Тот, кого зовут редко.</span>
+        <span class="for">Самая способная модель. Для узла, где ошибка стоит переделки фазы, и для длинной задачи без присмотра. Раз в месяц, не чаще.</span>
+        <div class="price">
+          <div class="row"><span class="label">цена</span><span class="x">10×</span></div>
+          <div class="bar"><i style="width:100%"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <span class="eyebrow">Ручка вторая</span>
+      <h2>Пять уровней усилия</h2>
+      <p class="lede prose">Полоски сверху — сколько модель думает, прежде чем ответить. Выше усилие: меньше пропусков и лишних вопросов, но дороже и дольше. Твой дефолт — <code>high</code>.</p>
+    </div>
+
+    <div class="ramp">
+      <div class="step" data-lvl="1">
+        <div class="fuel"><span class="on"></span><span></span><span></span><span></span><span></span></div>
+        <span class="lvl">low</span>
+        <span class="txt">Почти не думает. Механика: переименовать, отформатировать, пересказать файл.</span>
+      </div>
+      <div class="step" data-lvl="2">
+        <div class="fuel"><span class="on"></span><span class="on"></span><span></span><span></span><span></span></div>
+        <span class="lvl">medium</span>
+        <span class="txt">Ответ уже известен, надо аккуратно исполнить. Правка по готовому решению.</span>
+      </div>
+      <div class="step" data-lvl="3">
+        <div class="fuel"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div>
+        <span class="tag">по умолчанию</span>
+        <span class="lvl">high</span>
+        <span class="txt">Нормальная рабочая задача, где надо чуть подумать. Хороший баланс.</span>
+      </div>
+      <div class="step" data-lvl="4">
+        <div class="fuel"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+        <span class="tag">для кода</span>
+        <span class="lvl">xhigh</span>
+        <span class="txt">Лучший уровень для сборки и длинных задач в несколько шагов. Именно тут живёт разработка Knowly.</span>
+      </div>
+      <div class="step" data-lvl="5">
+        <div class="fuel"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
+        <span class="lvl">max</span>
+        <span class="txt">Когда правильность важнее цены: непонятный баг, полный регресс перед фазой.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <span class="eyebrow">Как выбирать</span>
+      <h2>Три вопроса перед задачей</h2>
+      <p class="lede prose">Спроси себя по порядку и остановись на первом «да».</p>
+    </div>
+
+    <div class="q">
+      <div class="q-row">
+        <span class="q-num">1</span>
+        <span class="q-text">Ошибка будет стоить переделки фазы?<small>Схема данных, механика слотов, узел, который потом никто не тронет</small></span>
+        <span class="q-out"><i class="dot" style="background:var(--fable)"></i>Fable 5 · high</span>
+      </div>
+      <div class="q-row">
+        <span class="q-num">2</span>
+        <span class="q-text">Надо решить, как правильно?<small>Собрать фичу, найти баг, проверить сходимость, придумать план</small></span>
+        <span class="q-out"><i class="dot" style="background:var(--opus)"></i>Opus 5 · xhigh</span>
+      </div>
+      <div class="q-row">
+        <span class="q-num">3</span>
+        <span class="q-text">Ответ уже известен, надо просто сделать?<small>Записать решение, поправить отступ, перенести отметки в трекер</small></span>
+        <span class="q-out"><i class="dot" style="background:var(--sonnet)"></i>Sonnet 5 · medium</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <span class="eyebrow">На твоих задачах</span>
+      <h2>Что на что менять в Knowly</h2>
+      <p class="lede prose">Реальные задачи, которые ты уже давал, — и то, чем их стоило делать.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Задача</th><th>Модель</th><th>Усилие</th></tr>
+        </thead>
+        <tbody>
+          <tr class="grp"><td colspan="3">Документы</td></tr>
+          <tr data-tier="sonnet">
+            <td class="task">Перенести отметки Дмитрия в трекер<small>tracker/index.html — механический перенос</small></td>
+            <td class="m" data-label="Модель">Sonnet 5</td><td class="e" data-lvl="1" data-label="Усилие">low</td>
+          </tr>
+          <tr data-tier="sonnet">
+            <td class="task">Записать принятое решение в <code>decisions/</code><small>выбор уже сделан, надо оформить с обоснованием</small></td>
+            <td class="m" data-label="Модель">Sonnet 5</td><td class="e" data-lvl="2" data-label="Усилие">medium</td>
+          </tr>
+          <tr data-tier="opus">
+            <td class="task">Обновить SPEC.md после пачки правок<small>надо понять, какие места спеки задеты — это уже решение</small></td>
+            <td class="m" data-label="Модель">Opus 5</td><td class="e" data-lvl="3" data-label="Усилие">high</td>
+          </tr>
+          <tr data-tier="opus">
+            <td class="task">«Проверь, всё ли схвачено» — сходимость документов<small>шесть проверок, перекрёстное чтение всех файлов</small></td>
+            <td class="m" data-label="Модель">Opus 5</td><td class="e" data-lvl="4" data-label="Усилие">xhigh</td>
+          </tr>
+
+          <tr class="grp"><td colspan="3">Прототип</td></tr>
+          <tr data-tier="sonnet">
+            <td class="task">Отступы, цвета, размеры, подписи<small>косметика, где решение уже принято глазами</small></td>
+            <td class="m" data-label="Модель">Sonnet 5</td><td class="e" data-lvl="2" data-label="Усилие">medium</td>
+          </tr>
+          <tr data-tier="opus">
+            <td class="task">Правка механики: перетаскивание, фильтры, порядок<small>правка меняет поведение, а не оформление</small></td>
+            <td class="m" data-label="Модель">Opus 5</td><td class="e" data-lvl="4" data-label="Усилие">xhigh</td>
+          </tr>
+          <tr data-tier="opus">
+            <td class="task">«Проверь прототип на логике»<small>обработчики против разметки, недостижимые ветки, края</small></td>
+            <td class="m" data-label="Модель">Opus 5</td><td class="e" data-lvl="3" data-label="Усилие">high</td>
+          </tr>
+
+          <tr class="grp"><td colspan="3">Сборка</td></tr>
+          <tr data-tier="opus">
+            <td class="task">Фича на Next.js + Supabase<small>назначение навыка, правило пяти слотов, экраны</small></td>
+            <td class="m" data-label="Модель">Opus 5</td><td class="e" data-lvl="4" data-label="Усилие">xhigh</td>
+          </tr>
+          <tr data-tier="opus">
+            <td class="task">План перед крупной фичей<small>четыре вопроса, порядок работ, развилки</small></td>
+            <td class="m" data-label="Модель">Opus 5</td><td class="e" data-lvl="4" data-label="Усилие">xhigh</td>
+          </tr>
+          <tr data-tier="opus">
+            <td class="task">Непонятный баг: «ломается при фильтре»<small>причина неизвестна, гипотезы надо перебирать</small></td>
+            <td class="m" data-label="Модель">Opus 5</td><td class="e" data-lvl="5" data-label="Усилие">max</td>
+          </tr>
+          <tr data-tier="opus">
+            <td class="task">Полный регресс перед новой фазой<small>все критерии ACCEPTANCE.md подряд</small></td>
+            <td class="m" data-label="Модель">Opus 5</td><td class="e" data-lvl="5" data-label="Усилие">max</td>
+          </tr>
+          <tr data-tier="fable">
+            <td class="task">Схема данных, которую потом не переделать<small>таблицы и поля в SPEC.md §4 — цена ошибки высокая</small></td>
+            <td class="m" data-label="Модель">Fable 5</td><td class="e" data-lvl="3" data-label="Усилие">high</td>
+          </tr>
+
+          <tr class="grp"><td colspan="3">Мелочи</td></tr>
+          <tr data-tier="haiku">
+            <td class="task">«Что в этом файле», git-статус, переименовать<small>ни одного решения не принимается</small></td>
+            <td class="m" data-label="Модель">Haiku 4.5</td><td class="e" data-lvl="1" data-label="Усилие">low</td>
+          </tr>
+          <tr data-tier="sonnet">
+            <td class="task">Сбор вакансий для Skill Map<small>много чтения, мало думания — но нужны ссылки на источник</small></td>
+            <td class="m" data-label="Модель">Sonnet 5</td><td class="e" data-lvl="2" data-label="Усилие">medium</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <span class="eyebrow">Правила</span>
+      <h2>Пять вещей, о которых легко забыть</h2>
+    </div>
+
+    <div class="rules">
+      <div class="rule-item">
+        <span class="t">Сначала опускай усилие, потом модель</span>
+        <span class="d">Opus на <code>medium</code> почти всегда лучше, чем Sonnet на <code>max</code>, и стоит примерно столько же. Понижение модели — второй шаг, не первый.</span>
+      </div>
+      <div class="rule-item">
+        <span class="t">Переключай на границе задачи, не посередине</span>
+        <span class="d">Смена модели или усилия обнуляет кеш разговора. Следующий ответ будет дороже и медленнее, даже если модель стала дешевле. У тебя уже есть правило «новая фаза — новая сессия»: там и переключай.</span>
+      </div>
+      <div class="rule-item">
+        <span class="t">Промах вниз видно сразу</span>
+        <span class="d">Агент делает не то, что просили, спорит с очевидным, пропускает края, блок «что не проверено» выходит пустым. Не доспоривай — подними усилие и переспроси с нуля.</span>
+      </div>
+      <div class="rule-item">
+        <span class="t">Проверка стоит дороже, чем кажется</span>
+        <span class="d">«Проведи регресс» — это чтение всех документов сразу. На <code>high</code> проверка становится поверхностной именно там, где она нужна. Регресс и сходимость — <code>xhigh</code> или <code>max</code>, без экономии.</span>
+      </div>
+      <div class="rule-item">
+        <span class="t">Подагентам можно дать модель попроще</span>
+        <span class="d">Твои <code>qa</code>, <code>requirements</code> и <code>research</code> запускаются отдельно. Читающему много и решающему мало (<code>research</code>) хватит Sonnet. Проверяющему (<code>qa</code>) — нет, ему нужен Opus.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <span class="eyebrow">Как</span>
+      <h2>Три способа переключить</h2>
+    </div>
+
+    <div class="cmds">
+      <div class="cmd">
+        <span class="when">на лету, внутри сессии</span>
+        <pre>/model sonnet
+/effort medium</pre>
+        <span class="note">Самый частый способ. Действует до конца сессии.</span>
+      </div>
+      <div class="cmd">
+        <span class="when">на старте</span>
+        <pre>claude --model sonnet \
+       --effort medium</pre>
+        <span class="note">Когда заранее знаешь, что за работа.</span>
+      </div>
+      <div class="cmd">
+        <span class="when">по умолчанию навсегда</span>
+        <pre>~/.claude/settings.json
+"model": "opus[1m]"
+"effortLevel": "high"</pre>
+        <span class="note">Так стоит сейчас. Менять не надо — Opus·high хороший дефолт, от которого удобно отступать в обе стороны.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <span class="eyebrow">Шпаргалка</span>
+      <h2>Три режима на каждый день</h2>
+      <p class="lede prose">Если запоминать нечего — запомни эти три. Они закрывают почти всю работу над Knowly.</p>
+    </div>
+
+    <div class="presets">
+      <div class="preset">
+        <span class="pname">Документы</span>
+        <span class="combo"><i class="dot" style="background:var(--sonnet)"></i>Sonnet 5 <span class="sep">·</span> <span style="color:var(--heat-2)">medium</span></span>
+        <span class="pfor">Решения, трекер, вычитка, косметика в прототипе. Всё, где ты уже знаешь ответ.</span>
+        <code>/model sonnet</code>
+      </div>
+      <div class="preset">
+        <span class="pname">Сборка</span>
+        <span class="combo"><i class="dot" style="background:var(--opus)"></i>Opus 5 <span class="sep">·</span> <span style="color:var(--heat-4)">xhigh</span></span>
+        <span class="pfor">Фичи, механика, планы, спека. Рабочий режим большую часть времени.</span>
+        <code>/model opus</code>
+      </div>
+      <div class="preset">
+        <span class="pname">Разбор</span>
+        <span class="combo"><i class="dot" style="background:var(--opus)"></i>Opus 5 <span class="sep">·</span> <span style="color:var(--heat-5)">max</span></span>
+        <span class="pfor">Непонятный баг, полный регресс, проверка перед новой фазой.</span>
+        <code>/effort max</code>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Есть ещё <code>/fast</code>: тот же Opus, но выдаёт ответ примерно в два с половиной раза быстрее и дороже. Имеет смысл, только когда ты сидишь и ждёшь короткую правку. Для длинной сборки бесполезно.
+  </footer>
+
+</div>
+
+</body>
+</html>
